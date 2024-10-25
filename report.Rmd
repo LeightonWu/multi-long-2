@@ -1,0 +1,33 @@
+---
+title: "Untitled"
+author: "Leighton Du"
+date: "2024-10-23"
+output: pdf_document
+--- 
+
+
+Education, Wealth, and Health Disparities in Aging
+
+Variables
+education level: edqual (ifs)
+self-reported health HRS and HSE: srh_hrs and srh_hse, 3 way form available (ifs)
+income at individual level: eqtotinc_bu_s	F9.2	BU equivalised total income - summary var
+wealth at household level: 
+nettotw_bu_s Net total wealth (benefit unit level). The sum of savings,
+investments, physical wealth and housing wealth after
+financial debt and mortgage debt has been subtracted.
+
+
+finance doc: 
+https://www.ucl.ac.uk/epidemiology-health-care/sites/epidemiology-health-care/files/financial_derived_variables_user_guide_waves_1to9.pdf
+
+Outline
+- remove records with missing values in any fields
+- facotr edu level, health var
+- chi sq test HRS and HSE self-reported health vars, hopefully no sig
+
+For each wave
+1. model w/ no constraints
+2. constrain cross-lagged coef to be equal
+3. compare fit
+
