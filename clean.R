@@ -54,11 +54,11 @@ for (i in 1:10){
   
   # add columns of interest to overall ifs data
   ifs0 <- ifs0 %>% select(c("Wave","idauniq", wave_house, 
-                            "edqual", "srh_hrs", "srh_hse",
-                            "srh3_hrs", "srh3_hse"))
+                            "edqual", "srh_hrs", "srh_hse"
+                            ))
 
   colnames(ifs0) <- c("Wave", "ID_Ind", "ID_Household", "Education", 
-                      "Health_HRS", "Health_HSE", "Health3_HRS", "Health3_HSE")
+                      "Health_HRS", "Health_HSE")
   
   ifs <- rbind(ifs, ifs0)
   
@@ -73,21 +73,28 @@ table(data$Health_HSE)
 table(data$Health_HRS)
 
 # only keep HRS since many respondents weren't asked HSE version in many waves (code -3)
-data <- data %>% select(c(-Health_HSE, -Health3_HSE))
+data <- data %>% select(c(-Health_HSE))
 
 # remove records where any field is missing
 data <- data %>% filter(if_all(everything(), ~ . >= 0))
 
-# factor
-fac_vars <- c("Wave", "ID_Ind", "ID_Household", "Education", 
-              "Health_HRS", "Health3_HRS")
-num_vars <- c("Income", "Wealth")
-data[fac_vars] <- lapply(data[fac_vars], as_factor)
+
+num_vars <- c("Wave", "ID_Ind", "ID_Household", "Education",
+              "Health_HRS",  "Wealth", "Income")
+
 data[num_vars] <- lapply(data[num_vars], as.numeric)
 
-data_l <- data
-data_w <- pivot_wider(names_from = "Wave", names_prefix = "")
+data_l <- data %>% filter(Wave > 6)
 
+data_w <- data_l %>% pivot_wider(id_cols = ID_Ind, names_from = Wave, 
+    values_from = c(Wealth, Income, Education, Health_HRS),  
+    names_sep = "_W"                     
+  )
 
+data_w_std <- data_w %>%
+  mutate(across(starts_with("Education"), scale),
+         across(starts_with("Wealth"), scale),
+         across(starts_with("Health_HRS"), scale),
+         across(starts_with("Income"), scale))
 
 
