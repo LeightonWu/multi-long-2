@@ -12,12 +12,11 @@ tbl_ifs <-
              pattern = "\\.tab$",
              full.names = T)
 
-# Initialize financial and ifs data df
+# Initialize financial and individual and family survey (ifs) data df
 fin <- data.frame()
 ifs <- data.frame()
 
 # Combine financial and ifs data into respective dfs
-# fin
 for (i in 1:10){
   
   # read wave data
@@ -84,13 +83,24 @@ num_vars <- c("Wave", "ID_Ind", "ID_Household", "Education",
 
 data[num_vars] <- lapply(data[num_vars], as.numeric)
 
-data_l <- data %>% filter(Wave > 6)
+data <- data %>% filter(Wave > 6)
 
-data_w <- data_l %>% pivot_wider(id_cols = ID_Ind, names_from = Wave, 
+# create a copy to store temporary values
+temp <- data$Health_HRS
+
+# apply simultaneous recoding
+data$Health_HRS[temp == 1] <- 5
+data$Health_HRS[temp == 2] <- 4
+data$Health_HRS[temp == 4] <- 2
+data$Health_HRS[temp == 5] <- 1
+
+# pivot to wide format
+data_w <- data %>% pivot_wider(id_cols = ID_Ind, names_from = Wave, 
     values_from = c(Wealth, Income, Education, Health_HRS),  
     names_sep = "_W"                     
   )
 
+# standardize data
 data_w_std <- data_w %>%
   mutate(across(starts_with("Education"), scale),
          across(starts_with("Wealth"), scale),

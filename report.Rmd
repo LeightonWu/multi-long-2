@@ -1,6 +1,6 @@
 ---
 title: "Income and Health Disparities in Aging"
-date: "2024-11-05"
+date: "2024-11-07"
 author: "Student ID: 11484265"
 output:
   pdf_document: default
@@ -31,18 +31,19 @@ library(lavaan)
 ```
 
 
-```{r clean, cache=TRUE}
+```{r clean, cache=F}
 source(file="clean.R")
 ```
 
-```{r model, cache=TRUE}
+```{r model, cache=F}
 source(file="models.R")
 ```
 
-```{r vis}
+```{r vis, cache=F}
 source(file="vis.R")
 ```
 
+\newpage 
 
 ```{=latex}
 \setcounter{tocdepth}{3}
@@ -57,153 +58,231 @@ source(file="vis.R")
 
 # Introduction
 
-How does income influence health outcomes across four waves (waves 7 to 10) in the aging population? Examining the link between income and health over multiple waves is essential to understanding the cyclical or cumulative effects of socioeconomic factors on health as people age. Income levels not only affect access to healthcare, nutritious food, and stable housing, but they also impact stress levels and overall mental well-being—all crucial factors for healthy aging. Tracking this relationship longitudinally helps clarify whether income shifts (such as retirement or financial strain) directly influence health, or if deteriorating health constrains income potential (e.g., due to medical costs or decreased work capability).
+The relationship between income trajectories and self-reported health has been well-documented, with positive associations observed in prior research (Akanni et al., 2022). Understanding this link over multiple time points is crucial for examining the cyclical or cumulative effects of socioeconomic factors on health as individuals age. Income not only influences access to essential resources such as healthcare, nutritious food, and stable housing, but also affects mental well-being and stress levels—all of which are vital for healthy aging. By tracking this relationship longitudinally, we can discern whether changes in income, such as those resulting from retirement or financial strain, directly affect health outcomes, or if deteriorating health itself limits income potential (e.g., through medical expenses or reduced work capacity).
 
-To address these research questions, cross-lagged models will be used, which are well-suited for examining the reciprocal effects between income and health over time. 
-Cross-sectional data only provide a snapshot, making it hard to determine cause-and-effect relationships. Longitudinal models like CLPM allow you to establish the temporal ordering of income and health changes. This approach helps in suggesting causal inferences, even though cross-lagged models don’t establish causation outright.  By analyzing waves over time, longitudinal methods capture these natural aging dynamics, providing a more realistic model of how income and health interact in real-life aging populations.
+To examine the relationship between income and self-reported health outcomes in the aging population, cross-lagged models will be applied to four waves of data from the English Longitudinal Study of Ageing (Banks et al., 2024). While cross-sectional data offer only a snapshot, longitudinal data enables the modeling of temporal order between changes in income and health. This approach allows for the exploration of causal inferences, though it is important to note that cross-lagged models do not establish causation definitively. By analyzing data across multiple waves, the natural dynamics of aging can be better captured, providing a more accurate and comprehensive understanding of these processes over time.
 
+# Data and Methods
 
-# Data and methods (30%):
-
-The English Longitudinal Study of Ageing (ELSA) is a comprehensive dataset that tracks the aging process among individuals aged 50 and above in England. ELSA collects data across multiple domains, including socioeconomic factors, health, and psychological well-being, with repeated measures over time. For this analysis, I focus on waves 7 to 10, allowing a four-wave longitudinal perspective on changes in health and income.
+The English Longitudinal Study of Ageing (ELSA) is a comprehensive dataset that tracks individuals aged 50 and older in England, gathering information across a wide range of domains, including socioeconomic status, health, and psychological well-being. This analysis focuses on data from waves 7 to 10, providing a four-wave longitudinal perspective on the relationship between income and health over time. 
 
 ## Variables
 
-* Income: The equivalised total income at the benefit unit level, adjusted for unit size. Total income here includes employment income, self-employment income, state benefits, state pension, private pension, asset income, and other sources. Each member of a benefit unit is assigned the unit's total income, providing a measure of financial resources adjusted to account for household composition. Records with missing income data are removed.
+* Income: This variable represents the equivalised total income at the benefit unit level, adjusted for unit size. Total income includes employment income, self-employment income, state benefits, state pensions, private pensions, asset income, and other sources. Each member of a benefit unit is assigned the unit’s total income, providing a measure of financial resources adjusted for household composition. Missing income data are excluded from the analysis. The income variable is standardized prior to modelling to allow for consistent comparison.
 
-<!-- * Wealth: Net total wealth at the benefit unit level, calculated as the combined value of savings, investments, physical assets, and housing wealth, minus financial and mortgage debt. -->
+* Self-Reported Health: Self-reported health status is used as an indicator of overall well-being, with previous research showing it as a reliable predictor of mortality and morbidity. The Health and Retirement Study (HRS) version is utilized due to incomplete data from the Health Survey for England (HSE) version. The original responses range from 1 (excellent health) to 5 (poor health), which are reversed and standardized for clarity before modelling. Records with missing health data are excluded from the analysis.
 
-* Self-Reported Health: Health is captured through self-reported health status, often regarded as a reliable predictor of mortality, morbidity, and overall well-being in longitudinal studies. Records with missing health data are removed.
-
-* IDs: Individual and household IDs ensure that data points are accurately linked across waves, facilitating longitudinal analysis.
+* IDs: Individual and household IDs are used to accurately link data points across waves, ensuring proper tracking of participants over time for longitudinal analysis.
 
 ## Descriptive statistics 
 
-```{r descriptive}
+```{r tabAll, tab.cap="Statistics on annual income (hundreds of pounds) and self-reported health."}
 
-tabIncome
-tabHSE
-tabHRS
+kable(tabAll,align='c',booktabs = T) %>% 
+  kable_styling(position = 'center', font_size = 10,
+                latex_options = c('striped',
+                                  'hold_position'))
 
 ```
 
+Income is somewhat right-skewed, with a median of £30,000 per annum, and is characterized by an extremely high maximum value. This indicates that while most individuals earn around the median, a small number of individuals have significantly higher incomes, pulling the distribution to the right.
 
+```{r tabHealth, tab.cap="Frequency of response on self-reported health."}
 
-## Explain what models (and their sequence) you are going to use 
-A series of cross-lagged panel models will be used, gradually incorporating constraints and random intercepts to refine the model.
+kable(tabHRS,align='c',booktabs = T) %>% 
+  kable_styling(position = 'center', font_size = 10,
+                latex_options = c('striped',
+                                  'hold_position'))
 
-1. Unconstrained Cross-Lagged Model: A basic cross-lagged model, estimating paths without any constraints across the waves. This model allows for an initial understanding of the dynamic relationships between income and health over time, with all parameters freely estimated for each wave.
+```
 
-2. Equality-Constrained Models: Equality constraints will be added one wave at a time. At each step, the new model will be compared to the previous best model using a Chi-Square difference test (ANOVA) to see if adding the constraint significantly betters the fit. This gradual process helps identify if certain effects are stable across time.
+Combined with the summary statistics, the frequency table for self-reported health shows a slight right skewness, suggesting that more individuals perceive themselves as healthier than neutral.
 
-3. Random Intercept Cross-Lagged Model: Random intercepts for both income and health will be included. This step accounts for individual differences that might consistently affect these variables across waves (e.g., baseline levels of income or health that vary between individuals). ANOVA will be used to test if the inclusion of random intercepts significantly improves the model fit.
+## Model Sequence
 
+A series of cross-lagged panel models will be used to explore the relationships between income and health, progressively adding constraints and random intercepts to improve model fit.
 
+1. Unconstrained Cross-Lagged Model: This initial model estimates the relationships between income and health without imposing any constraints across the waves. It serves as a baseline for understanding how these variables influence each other over time, with all parameters freely estimated.
+
+2. Equality-Constrained Models: Constraints will be introduced gradually, one wave at a time. After each addition, a Chi-Square difference test (ANOVA) will be performed to compare the new model with the previous best-fitting model, helping to determine whether the added constraint improves the model fit. This step identifies whether certain effects are stable across time.
+
+3. Random Intercept Cross-Lagged Model: Random intercepts will be incorporated for both income and health to account for individual differences that may consistently affect these variables across waves (e.g., baseline levels of income or health that vary between individuals). ANOVA will again be used to assess whether the inclusion of random intercepts significantly enhances the model fit.
+
+\newpage
 
 # Analysis
-•	Present the different models and interpret them 
+
 ## Model 1 (Base)
+
+Model 1 is the base model, incorporating both auto-regressive and cross-lagged paths for income and health without any constraints. This model serves as a starting point to examine the dynamic relationships between income and health over time, with all parameters freely estimated, providing an initial understanding of the interactions between these variables.
 
 ```{r M1}
 cat(model_1)
 sumM1
 ```
 
-The model indicates a significant positive effect of previous income on subsequent income across waves, though the effect size decreases over time (0.567 for Wave 8, 0.530 for Wave 9, and 0.283 for Wave 10). Health also has a significant but small negative effect on income in all waves, suggesting that poorer health is associated with a slight reduction in future income.
+The results indicate a significant positive effect of previous income on subsequent income across waves, although the effect size diminishes over time. Health has a smaller, yet still positive, effect on income in all waves. Health demonstrates strong stability over time, with previous health significantly predicting future health, while income has a much smaller positive effect on health in each wave.
 
-Similarly, health shows strong stability over time, with previous health significantly predicting future health (coefficients around 0.65 across waves). Income has a modest negative effect on health in each wave, although the impact is smaller than the stability of health over time.
+The covariances between income and health are generally positive but small, and only significant in Waves 7, 8, and 10. This suggests that while there is a positive relationship between income and health, it is not consistently strong across all waves.
 
-The covariances between income and health are generally negative but small, and only significant in Waves 7, 8, and 10. This suggests a minor inverse relationship between income and health at each wave level, but it is not consistently strong across all waves.
-
+\newpage
 
 ## Model 2-4
 
-```{r M2}
+Equality constraints are applied to the cross-lagged paths between income and health, one wave at a time, to test if the relationships between these variables remain consistent across the waves. This allows for a more refined understanding of whether the effects of income on health, and vice versa, vary or stay stable over time.
+
+```{r anv12}
+
 cat(model_2)
-sumM2
 anvM12
+
 ```
 
-Equality constraints were applied to the cross-lagged paths between income and health, specifically for the effect of each variable on the other (parameter "a" was constrained to be equal across both directions). The results show that income and health continue to significantly predict each other over time, with both cross-lagged effects remaining negative.
+When equality constraints are applied to wave 8, there is a significant improvement in model fit compared to the base model. However, the constrained model has a slightly higher AIC and BIC, indicating a trade-off between simplicity and fit quality. Nevertheless, the fit indices suggest the model still provides a good overall fit despite the added constraint.
 
-The significant chi-squared difference between the initial model (fit_1) and the constrained model (fit_2) indicates that adding this constraint has a statistically significant impact on model fit. The constrained model, however, has a slightly higher AIC and BIC, suggesting a potential trade-off between model parsimony and fit quality. Additionally, the RMSEA remains low, suggesting the model still has a good fit overall despite the constraint.
 
-The model with additional constraints on the cross-lagged paths for wave 9 and 10 did not yield significant chi-squared results, indicating that the fit did not improve compared to the previous model. The model may be too restrictive, limiting the model's ability to accurately represent the relationships.
+```{r anv34}
+
+anvM23
+anvM24
+
+```
+
+The models with additional constraints on the cross-lagged paths for waves 9 and 10 (fit_3 and fit_4) did not yield significant results, indicating that these models may be too restrictive. This suggests that the influence may be stronger in one direction. The coefficients in these models are very small; if pressed, one might conclude that income has a stronger impact on health in wave 9, while health has a stronger impact on income in wave 10.
+
+```{r M2}
+
+sumM2
+
+```
+
+Although only wave 7 has the constraint, the results of model 2 are largely consistent with those of model 1. The constrained coefficient for health in wave 7 predicting income in wave 8 decreased from 0.104 to 0.058. Otherwise, income and health continue to significantly predict each other over time, though with very small coefficients, and both cross-lagged effects remain positive. Given the small values, it’s unclear whether this represents a meaningful difference in practice.
+
+\newpage
 
 ## Model 5-7
 
-Equality constraint were placed on each wave's autoregressive path and compared to the prevoius. In the end all were significant.
+Equality constraints were applied to the auto-regressive paths for each wave and compared to the previous model.
 
-```{r M5}
+```{r M7Paths}
+
 cat(model_7)
+
+```
+
+```{r anv2567}
+
 anvM25
 anvM56
 anvM67
 
-sumM7
 ```
 
+Retaining all constraints results in a significant improvement in the model.
 
-Strong regression coefficients for both income and health across the waves can be observed. For instance, in W8, income shows a strong positive relationship with Income_W7 (b = 0.620), indicating that higher income in the previous wave strongly predicts income in W8. Conversely, there is a negative relationship with Health_HRS_W7 (a = -0.059), suggesting that better health in W7 is associated with lower income in W8. Similar patterns are evident in W9 and W10, where income in each wave consistently predicts income in subsequent waves. Health measures also show significant positive relationships with their previous wave, though some relationships, like Health_HRS_W8 on Income_W9, are non-significant.
+```{r M7}
 
-The covariances highlight significant negative correlations between income and health at W7, W8, and W10, with the strongest correlation observed between Income_W7 and Health_HRS_W7 (Estimate = -0.174). This finding indicates that individuals with higher income tend to report poorer health and vice versa, a key aspect of your analysis.
+sumM7
 
-In terms of intercepts and variances, all variables show significant positive variances across waves, indicating variability in income and health measures among the sample. The intercept for Health_HRS_W7 is negative, suggesting that the average health score at W7 is below zero, while subsequent health variables have positive intercepts, reflecting improved health measures over time.
+```
 
+In addition to prior observations, stronger auto-regressive effects for both income and health across the waves are now evident.
+
+It is worth noting that adding constraints to the auto-regressive terms has led to the cross-lagged effects of health on income in waves 9 and 10 becoming non-significant. This suggests that the stability of each variable over time might be accounting for some of the variation in the relationships between income and health.
+
+The covariances reveal significant positive correlations between income and health at waves 7, 8, and 10, indicating that individuals with higher income tend to report poorer health, and vice versa. However, the covariance in wave 9 is insignificant, suggesting a weaker or potentially absent association between income and health at that time point.
+
+The intercept for Health_HRS_W7 is positive, indicating that the average health score at wave 7 is above average. In contrast, the intercepts for income in waves 8 and 9 are not significant, suggesting that the average income levels at these time points do not significantly differ from the overall mean, with a slight decline observed from wave 7, where income was notably higher than average.
+
+\newpage
 
 ## Model 8
 
-```{r M7}
+Random intercepts for both health and income across all four waves are added in this model to estimate the variation that remains stable over time. This allows for accounting for individual differences in baseline levels of income and health that do not change across waves, providing a more accurate representation of how these variables evolve relative to each individual's starting point.
+
+```{r anv78}
+
 cat(model_8)
-sumM8
 anvM78
+
 ```
 
-The intercepts in the cross-lagged model provide important insights into the overall trends of income and health over time. The negative intercepts for Income_W8, Income_W9, and Income_W10 suggest that, on average, individuals' incomes at these waves are below zero, indicating economic challenges faced by the population. This persistent low income level may reflect systemic issues that affect financial stability, such as job insecurity or insufficient social support.
+As seen in the ANOVA results, the inclusion of random intercepts significantly improves the model fit, indicating that accounting for stable individual differences in income and health over time provides a better representation of the data.
 
-In contrast, Health_HRS_W10 shows a positive intercept, implying that health perceptions or outcomes have improved on average over the study period. This suggests a potential increase in the overall health status of individuals despite the declining income levels. The discrepancy between income and health trends may indicate that improvements in health could be driven by factors other than income, such as enhanced access to healthcare, public health initiatives, or changes in social determinants of health.
+```{r M8}
 
+sumM8
+
+```
+
+Now that the between-person variation (0.334) has been accounted for, the cross-lagged effects have reversed. The difference in cross-lagged effects between this model and the previous ones is likely due to the inclusion of random intercepts. These random intercepts capture stable, individual-level differences in income and health, isolating within-person variability over time. Without random intercepts, the model combines both between-person and within-person effects, which can distort or inflate the observed relationships. By adjusting for baseline levels of income and health, the model with random intercepts focuses on time-specific changes, resulting in reversed cross-lagged effects and providing a clearer and more accurate representation of the dynamic relationship between income and health.
+
+\newpage
 
 ##	Model Assumptions
 
 ### Sample Size
 
-Klein et al recommend a ratio of 20 cases per variable measured. This is met at a total of 78443 for the 33 model parameters, averaging 2377 observations per parameter.
-
-### Temporal Order
-
-The flow of influence in the model is unidirectional due to the nature of panel studies conducted in waves; events that occur later in time cannot influence those that have already happened.
+Klein recommends a ratio of 20 cases per variable measured, and this guideline is met in the current model. With a total of 78,443 observations and 33 model parameters, the average number of observations per parameter is 2,377, which comfortably exceeds the recommended ratio, ensuring sufficient statistical power for the analysis.
 
 ### Variable Distributions
 
-```{r skew}
+```{r skewHealth, fig.cap="Self-reported health, 1=Poor, 5=Excellent."}
 
-graphHealth
-graphIncome1
-graphIncome2
+hist(data$Health_HRS,
+     main="Distribution of Self-Reported Health", 
+     xlab="Response", 
+     ylab="Frequency", )
 
 ```
 
-The distribution of health is fairly even. While there are extremely high outliers for income, the main distribution (zoomed-in) is not highly skewed.
+Health is fairly evenly distributed across the sample, satisfying the requirement for a balanced distribution of the variable in the analysis. This distribution allows for a more robust and generalizable model, as extreme skewness or heavy clustering in one category could otherwise distort the relationships being tested.
 
-<!-- * (Pedhazur, 1997) residuals are not intercorrelated -->
+```{r skewIncome}
 
-* usual assumptions that one commonly finds in regression
+plot(density(data$Income, na.rm=TRUE), 
+     main="Density Plot of Income", 
+     xlab="Income (hundreds, pounds)", 
+     ylab="Density", 
+     col="royalblue", 
+     lwd=2, 
+     xlim=c(min(data$Income), max(data$Income)))
 
+plot(density(data$Income, na.rm=TRUE), 
+                     main="Density Plot of Income (Zoomed-In)", 
+                     xlab="Income (hundreds, pounds)", 
+                     ylab="Density", 
+                     col="salmon", 
+                     lwd=2, 
+                     xlim=c(min(data$Income), 1500))
 
+```
 
+While there are extremely high outliers for income, the majority of the data points, with income under £150,000, exhibit an acceptable level of skewness. This suggests that while the data contains some extreme values, the distribution of income for the majority of individuals is relatively normal, which supports the validity of the analysis and the robustness of the results for most of the sample.
 
+### Temporal Order
+
+The flow of influence in the model is unidirectional, consistent with the structure of panel studies conducted in waves. In such studies, events that occur later in time cannot influence those that have already occurred. This temporal ordering ensures that the analysis reflects a logical causal direction, where earlier events potentially influence later outcomes, but not vice versa.
 
 
 # Conclusions
 
-This study aimed to explore the relationship between income and health over time, specifically examining how each influences the other across waves of data collection. a cross-lagged panel model was constructed, allowing us to test the bidirectional influences of income and health across multiple waves. The model included lagged paths that assessed the predictive power of income on health outcomes over time and vice versa, while controlling for autoregressive effects within each variable. The results indicated that while income at an earlier wave significantly predicted subsequent health status, the reverse effect of health on income showed mixed significance across waves, suggesting a stronger influence of income on health than health on income. Longitudinal data analysis was essential to answering the research question because it allowed us to observe changes and relationships over time rather than just at a single point. 
+This study aimed to explore the relationship between income and health over time, specifically examining how each influences the other across multiple waves of data collection. A cross-lagged model was constructed to assess the bidirectional influences of income and health. The model included lagged paths that tested the predictive power of income on health outcomes and vice versa, while controlling for autoregressive effects within each variable. The results suggest a somewhat stronger influence of income on health, particularly in wave 9, although the relationship turned negative after accounting for between-person variation. This finding contrasts with previous research. However, due to the limitations of the model, causal relationships cannot be definitively established or inferred.
+
+Longitudinal data analysis was crucial for answering the research question, as it enabled the observation of changes and relationships over time, rather than relying on a snapshot at a single point. This approach allowed for a more nuanced understanding of how income and health influence each other across different waves, capturing the dynamic nature of these variables.
  
-The study faced several limitations affecting the reliability and generalizability of its findings. Self-reported health are prone to measurement errors; objective health data could improve accuracy. Attrition bias is another concern, as participant dropout over time may introduce bias if remaining participants differ significantly, especially regarding health or income levels. While autoregressive effects control for some stability, unobserved confounders, like lifestyle or environment, may still impact results. Additionally, the study’s limited timeframe, covering only waves 7 to 10, may miss long-term income-health dynamics, and the UK-based sample restricts generalizability to other contexts. Lastly, cross-lagged models suggest causal direction but do not confirm causation, so findings should be interpreted as associations. 
+The analysis encountered several limitations. Self-reported health data are subject to measurement errors, and incorporating objective health indicators could improve the accuracy of the findings. While auto-regressive effects account for some stability, including additional variables, such as education, household wealth, and other socio-demographic factors, would provide a more comprehensive understanding of the income-health relationship. Furthermore, the study’s limited timeframe, spanning only waves 7 to 10, may not capture long-term dynamics between income and health. Finally, the UK-based sample limits the generalizability of the findings to other populations and settings.
 
+\newpage
 
+# References
 
+Akanni, L., Lenhart, O., & Morton, A. (2022). Income trajectories and self-rated health status in the UK. SSM - Population Health, 17, 101035. https://doi.org/10.1016/j.ssmph.2022.101035 
 
+Banks, J., Batty, G. David, Breedvelt, J., Coughlin, K., Crawford, R., Marmot, M., Nazroo, J., Oldfield, Z., Steel, N., Steptoe, A., Wood, M., Zaninotto, P. (2024). English Longitudinal Study of Ageing: Waves 0-10, 1998-2023. [data collection]. 40th Edition. UK Data Service. SN: 5050, DOI: http://doi.org/10.5255/UKDA-SN-5050-27
+
+Klein, R. B. (1998). Principles and practice of structural equation modeling.
+New York: Guilford Press.
 
 
 \newpage

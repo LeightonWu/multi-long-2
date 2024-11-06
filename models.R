@@ -3,7 +3,6 @@ library(tidyverse)
 
 ##########################
 model_1 <- '
-
   # Cross-lagged paths
   Income_W8 ~ 1 + Income_W7 + Health_HRS_W7
   Income_W9 ~ 1 + Income_W8 + Health_HRS_W8
@@ -18,12 +17,10 @@ model_1 <- '
   Health_HRS_W8 ~~ Income_W8
   Health_HRS_W9 ~~ Income_W9
   Health_HRS_W10 ~~ Income_W10
-  
 '
 
 # model 2: equal cross-effects wave 7
 model_2 <- '
-
   # Cross-lagged paths
   Income_W8 ~ 1 + Income_W7 + a*Health_HRS_W7
   Income_W9 ~ 1 + Income_W8 + Health_HRS_W8
@@ -38,12 +35,10 @@ model_2 <- '
   Health_HRS_W8 ~~ Income_W8
   Health_HRS_W9 ~~ Income_W9
   Health_HRS_W10 ~~ Income_W10
-  
 '
 
 # model 3: equal cross-effects wave 8
 model_3 <- '
-
   # Cross-lagged paths
   Income_W8 ~ 1 + Income_W7 + a*Health_HRS_W7
   Income_W9 ~ 1 + Income_W8 + b*Health_HRS_W8
@@ -58,12 +53,10 @@ model_3 <- '
   Health_HRS_W8 ~~ Income_W8
   Health_HRS_W9 ~~ Income_W9
   Health_HRS_W10 ~~ Income_W10
-  
 '
 
 # model 4: equal cross-effects wave 9
 model_4 <- '
-
   # Cross-lagged paths
   Income_W8 ~ 1 + Income_W7 + a*Health_HRS_W7
   Income_W9 ~ 1 + Income_W8 + Health_HRS_W8
@@ -78,13 +71,11 @@ model_4 <- '
   Health_HRS_W8 ~~ Income_W8
   Health_HRS_W9 ~~ Income_W9
   Health_HRS_W10 ~~ Income_W10
-  
 '
 
 
 # model 5 : stability on income
 model_5 <- '
-
   # Cross-lagged paths
   Income_W8 ~ 1 + b*Income_W7 + a*Health_HRS_W7
   Income_W9 ~ 1 + Income_W8 + Health_HRS_W8
@@ -99,11 +90,9 @@ model_5 <- '
   Health_HRS_W8 ~~ Income_W8
   Health_HRS_W9 ~~ Income_W9
   Health_HRS_W10 ~~ Income_W10
-
 '
 
 model_6 <- '
-
   # Cross-lagged paths
   Income_W8 ~ 1 + b*Income_W7 + a*Health_HRS_W7
   Income_W9 ~ 1 + c*Income_W8 + Health_HRS_W8
@@ -118,11 +107,9 @@ model_6 <- '
   Health_HRS_W8 ~~ Income_W8
   Health_HRS_W9 ~~ Income_W9
   Health_HRS_W10 ~~ Income_W10
-
 '
 
 model_7 <- '
-
     # Cross-lagged paths
     Income_W8 ~ 1 + b*Income_W7 + a*Health_HRS_W7
     Income_W9 ~ 1 + c*Income_W8 + Health_HRS_W8
@@ -137,7 +124,6 @@ model_7 <- '
     Health_HRS_W8 ~~ Income_W8
     Health_HRS_W9 ~~ Income_W9
     Health_HRS_W10 ~~ Income_W10
-
 '
 
 
@@ -145,7 +131,6 @@ model_7 <- '
 # model 8 : cross-lagged model with random intercept for Income
 
 model_8 <- '
-  
     # Cross-lagged paths
     Income_W8 ~ 1 + b*Income_W7 + a*Health_HRS_W7
     Income_W9 ~ 1 + c*Income_W8 + Health_HRS_W8
@@ -163,7 +148,6 @@ model_8 <- '
     
     rm =~ 1*Income_W7 + 1*Income_W8 + 1*Income_W9 + 1*Income_W10
     rm =~ 1*Health_HRS_W7 + 1*Health_HRS_W8 + 1*Health_HRS_W9 + 1*Health_HRS_W10
-  
 '
 
 
